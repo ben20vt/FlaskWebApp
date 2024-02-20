@@ -13,7 +13,7 @@ def QueryDB(record_ID):
 
     query_input = """ from(bucket: "OnondagaCountyiCAD")
         |> range(start: -2d)
-        |> filter(fn: (r) => r["_measurement"] == "911Events3")
+        |> filter(fn: (r) => r["_measurement"] == "911Events")
         |> filter(fn: (r) => r["record_ID"] == "PlaceholderID") """
 
     query = query_input.replace("PlaceholderID", record_ID)

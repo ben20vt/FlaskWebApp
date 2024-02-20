@@ -13,7 +13,7 @@ def CloseAllCases():
     
     query_closeall = """ from(bucket: "OnondagaCountyiCAD")
         |> range(start: -2d)
-        |> filter(fn: (r) => r._measurement == "911Events3" and r._field == "Status")
+        |> filter(fn: (r) => r._measurement == "911Events" and r._field == "Status")
         |> map(
             fn: (r) => ({r with
                 _value: if r._value == "Open" then

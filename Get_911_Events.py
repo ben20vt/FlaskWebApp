@@ -91,7 +91,7 @@ for index2 in range(len(table)):
     else:
         Status = "Open"
         point = (
-            Point("911Events3")
+            Point("911Events")
             .field("Status", Status)
             .tag("record_ID", record_ID)
             .tag("Date/Time", DateandTime)
