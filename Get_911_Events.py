@@ -3,7 +3,11 @@ import my_LatLong
 import influxdb_client, os, time
 from influxdb_client import InfluxDBClient, Point, WritePrecision
 from influxdb_client.client.write_api import SYNCHRONOUS
-import Get_Case_Status
+import QueryDB
+import UpdateStatus
+from numpy import nan
+import hashlib
+import CloseAllCases
 
 INFLUXDB_TOKEN = 'w04oO0vXp-RrUYE7Nj4Wqc9gR0c4KF0IQ9wfsqGQvP5bGt-KWgdYM6RYG4nw6VF_khZNEYaLT1dx1fAUTTMCWQ=='
 url = r'https://911events.ongov.net/CADInet/app/_rlvid.jsp?_rap=pc_Cad911Toweb.doLink1Action&_rvip=/events.jsp'
@@ -12,48 +16,100 @@ url = r'https://911events.ongov.net/CADInet/app/_rlvid.jsp?_rap=pc_Cad911Toweb.d
 tables = pd.read_html(url) # Returns list of all tables on page
 table0 = tables[0] # Select table of interest
 idx = len(table0)
-table = table0.iloc[7:idx-8,0:6]
-
-for index2 in range(len(data_table)):
-    Agency = data_table.iloc[index2,0]
-    DateandTime = data_table.iloc[index2,1]
-    IncidentType = data_table.iloc[index2,2]
-    Address = data_table.iloc[index2,3]
-    CityJurisdiction = data_table.iloc[index2,4]
-    CrossStreets = data_table.iloc[index2,5]
-    Status = "Open"
-    name = str(Agency + DateandTime + IncidentType + Address + CityJurisdiction + CrossStreets)
-    record_ID = hash(name)
-    [Lat, Long] = my_LatLong(Address, CrossStreets)
-    Status = Get_Case_Status(record_ID)
-    if Status == 
-            return Status = "Open"
-        else:
-            return Status = "Closed"
-     
+table = table0.iloc[7:idx-14,0:6]
 
 
-## Prepare for Writing to DB
+## Initialize Database
 token = INFLUXDB_TOKEN
 org = "User-Space"
 url2 = "http://10.50.1.101:8086"
 
 write_client = influxdb_client.InfluxDBClient(url=url2, token=token, org=org)
-bucket="Data2"
+bucket="Data3"
 write_api = write_client.write_api(write_options=SYNCHRONOUS)
 
+sha256_hash = hashlib.new("SHA256")
+Active_Records = []
+
+CloseAllCases()
+
+## Process Table to DB
+for index2 in range(len(table)):
+    Agency = table.iloc[index2,0]
+    if str(Agency) == 'nan':
+        Agency = "Unavailable"
+    else:
+        Agency = str(table.iloc[index2,0])
+
+    DateandTime = table.iloc[index2,1]
+    if str(DateandTime) == 'nan':
+        DateandTime = "Unavailable"
+    else:
+        DateandTime = str(table.iloc[index2,1])
+
+    IncidentType = table.iloc[index2,2]
+    if str(IncidentType) == 'nan':
+        IncidentType = "Unavailable"
+    else:
+        IncidentType = str(table.iloc[index2,2])
+
+    Address = table.iloc[index2,3]
+    if str(Address) == 'nan':
+        Address = ""
+    else:
+        Address = str(table.iloc[index2,3])
+
+    CityJurisdiction = table.iloc[index2,4]
+    if str(CityJurisdiction) == 'nan':
+        CityJurisdiction = "Unavailable"
+    else:
+        CityJurisdiction = str(table.iloc[index2,4])
+
+    CrossStreets = table.iloc[index2,5]
+    if str(CrossStreets) == 'nan':
+        CrossStreets = ""
+    else:
+        CrossStreets = str(table.iloc[index2,5])
+
+    Status = "Open"
+    name = str(Agency + DateandTime + IncidentType + Address + CityJurisdiction + CrossStreets)
+    sha256_hash.update(name.encode())
+    
+    record_ID = sha256_hash.hexdigest()
+    
+    [Lat, Long] = my_LatLong.my_LatLong(Address, CrossStreets)
+
+    Exist = QueryDB.QueryDB(record_ID)
+    if Exist == 1:
+       Status = "Open" 
+    else:
+        Status = "Open"
+        point = (
+            Point("911Events8")
+            .field("record_ID", record_ID)
+            .tag("Date/Time", DateandTime)
+            .tag("Status", Status)
+            .tag("Agency", Agency)
+            .tag("Incident Type", IncidentType)
+            .tag("City Jurisdiction", CityJurisdiction)
+            .tag("Latitude", Lat)
+            .tag("Longitude", Long)
+        )
+        write_api.write(bucket=bucket, org="User-Space", record=point)
+    
+    Active_Records.append(record_ID)
+
+
+    
+
+      
+     
+
+
+
+
 # Preparing Dataframe: 
-table.set_index("Date/Time")
-for index in range(len(table)):
-  point = (
-    Point("911Events")
-    .field("Status", status)
-    .tag("Agency", table.iloc[index,0])
-    .tag("Incident Type", table.iloc[index,2])
-    .tag("Address", table.iloc[index,3])
-    .tag("City Jurisdiction", table.iloc[index,4])
-    .tag("Cross Streets", table.iloc[index,5])
-  )
-  write_api.write(bucket=bucket, org="User-Space", record=point)
+#table.set_index("Date/Time")
+  
   
 
