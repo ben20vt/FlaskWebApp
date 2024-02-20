@@ -30,7 +30,7 @@ write_api = write_client.write_api(write_options=SYNCHRONOUS)
 sha256_hash = hashlib.new("SHA256")
 Active_Records = []
 
-CloseAllCases.CloseAllCases()
+
 
 ## Process Table to DB
 for index2 in range(len(table)):
@@ -103,7 +103,7 @@ for index2 in range(len(table)):
         )
         write_api.write(bucket=bucket, org="User-Space", record=point)
     
-    Active_Records.append(record_ID)
-
+        Active_Records.append(record_ID)
+    #CloseAllCases.CloseAllCases(Active_Records)
   
 
