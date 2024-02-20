@@ -11,9 +11,9 @@ def QueryDB(record_ID):
     client = influxdb_client.InfluxDBClient(url=url, token=token, org=org)
     query_api = client.query_api()
 
-    query_input =""" from(bucket: "Data3")
+    query_input =""" from(bucket="OnondagaCountyiCAD")
         |> range(start: -1d)
-        |> filter(fn: (r) => r["_measurement"] == "911Events8")
+        |> filter(fn: (r) => r["_measurement"] == "911Events")
         |> filter(fn: (r) => r["_field"] == "record_ID")
         |> filter(fn: (r) => r["_value"] == "PlaceholderID")
         |> last()

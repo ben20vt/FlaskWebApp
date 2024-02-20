@@ -11,9 +11,9 @@ def CloseAllCases():
     client = influxdb_client.InfluxDBClient(url=url, token=token, org=org)
     query_api = client.query_api()
     
-    query_closeall = """ from(bucket: "Data3")
+    query_closeall = """ from(bucket="OnondagaCountyiCAD")
         |> range(start: -30d)
-        |> filter(fn: (r) => r._measurement == "911Events8" and r._field == "record_ID")
+        |> filter(fn: (r) => r._measurement == "911Events" and r._field == "record_ID")
         |> map(
             fn: (r) => ({r with
                 Status: if r.Status == "Open" then

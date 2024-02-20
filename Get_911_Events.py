@@ -4,10 +4,10 @@ import influxdb_client, os, time
 from influxdb_client import InfluxDBClient, Point, WritePrecision
 from influxdb_client.client.write_api import SYNCHRONOUS
 import QueryDB
-import UpdateStatus
 from numpy import nan
 import hashlib
 import CloseAllCases
+import TrimIngestData
 
 INFLUXDB_TOKEN = 'w04oO0vXp-RrUYE7Nj4Wqc9gR0c4KF0IQ9wfsqGQvP5bGt-KWgdYM6RYG4nw6VF_khZNEYaLT1dx1fAUTTMCWQ=='
 url = r'https://911events.ongov.net/CADInet/app/_rlvid.jsp?_rap=pc_Cad911Toweb.doLink1Action&_rvip=/events.jsp'
@@ -16,7 +16,9 @@ url = r'https://911events.ongov.net/CADInet/app/_rlvid.jsp?_rap=pc_Cad911Toweb.d
 tables = pd.read_html(url) # Returns list of all tables on page
 table0 = tables[0] # Select table of interest
 idx = len(table0)
-table = table0.iloc[7:idx-14,0:6]
+EndofData = TrimIngestData.TrimIngestData(table0)
+EndofData = EndofData + 1
+table = table0.iloc[7:EndofData,0:6]
 
 
 ## Initialize Database
@@ -25,13 +27,13 @@ org = "User-Space"
 url2 = "http://10.50.1.101:8086"
 
 write_client = influxdb_client.InfluxDBClient(url=url2, token=token, org=org)
-bucket="Data3"
+bucket="OnondagaCountyiCAD"
 write_api = write_client.write_api(write_options=SYNCHRONOUS)
 
 sha256_hash = hashlib.new("SHA256")
 Active_Records = []
 
-CloseAllCases()
+CloseAllCases.CloseAllCases()
 
 ## Process Table to DB
 for index2 in range(len(table)):
@@ -85,7 +87,7 @@ for index2 in range(len(table)):
     else:
         Status = "Open"
         point = (
-            Point("911Events8")
+            Point("911Events")
             .field("record_ID", record_ID)
             .tag("Date/Time", DateandTime)
             .tag("Status", Status)
