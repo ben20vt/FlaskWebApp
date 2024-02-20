@@ -14,12 +14,88 @@ url = r'https://911events.ongov.net/CADInet/app/_rlvid.jsp?_rap=pc_Cad911Toweb.d
 
 ## Read from 911events.ongov.net
 tables = pd.read_html(url) # Returns list of all tables on page
-table0 = tables[0] # Select table of interest
+table = tables[6] # Select table of interest
+length = len(table)
+table = table.drop([length - 1])
 
-EndofData = TrimIngestData.TrimIngestData(table0)
-EndofData = EndofData + 1
-table = table0.iloc[7:EndofData,0:6]
+# table0 = tables[0] # Select table of interest
+# table = tables[0]
+# EndofData = TrimIngestData.TrimIngestData(table0)
+# #EndofData = EndofData + 1
+# #table = table0.iloc[7:EndofData,0:6]
+# end = len(table)
+# length = end - EndofData - 1
+# to_drop = [0, 1, 2, 3, 4, 5, 6]
+# for i in range(length):
+#     to_drop.append(i + EndofData + 1)
+# table = table.drop(to_drop)
 
+
+# backup_table = tables[6]
+# EndofData_backup = TrimIngestData.TrimIngestData(backup_table)
+# EndofData_backup = EndofData_backup + 1
+# backup_table = backup_table.iloc[0:EndofData,0:6]
+
+# maintabletype = type(backup_table.iloc[1,2])
+# backuptabletype = type(table.iloc[1,2])
+
+# if maintabletype == int and backuptabletype == int:
+#     tables = pd.read_html(url) # Returns list of all tables on page
+#     table0 = tables[0] # Select table of interest
+
+#     EndofData = TrimIngestData.TrimIngestData(table0)
+#     EndofData = EndofData + 1
+#     table = table0.iloc[7:EndofData,0:6]
+#     backup_table = tables[6]
+#     EndofData_backup = TrimIngestData.TrimIngestData(backup_table)
+#     EndofData_backup = EndofData_backup + 1
+#     backup_table = backup_table.iloc[0:EndofData,0:6]
+# else:
+#     Output = "Success"
+
+# maintabletype = type(backup_table.iloc[1,2])
+# backuptabletype = type(table.iloc[1,2])
+
+# if maintabletype == int and backuptabletype == int:
+#    tables = pd.read_html(url) # Returns list of all tables on page
+#    table0 = tables[0] # Select table of interest
+#    EndofData = TrimIngestData.TrimIngestData(table0)
+#    EndofData = EndofData + 1
+#    table = table0.iloc[7:EndofData,0:6]
+#    backup_table = tables[6]
+#    EndofData_backup = TrimIngestData.TrimIngestData(backup_table)
+#    EndofData_backup = EndofData_backup + 1
+#    backup_table = backup_table.iloc[0:EndofData,0:6]
+# else:
+#     Output = "Success"   
+
+# maintabletype = type(backup_table.iloc[1,2])
+# backuptabletype = type(table.iloc[1,2])
+
+# if maintabletype == int and backuptabletype == int:
+#    tables = pd.read_html(url) # Returns list of all tables on page
+#    table0 = tables[0] # Select table of interest
+#    EndofData = TrimIngestData.TrimIngestData(table0)
+#    EndofData = EndofData + 1
+#    table = table0.iloc[7:EndofData,0:6]
+#    backup_table = tables[6]
+#    EndofData_backup = TrimIngestData.TrimIngestData(backup_table)
+#    EndofData_backup = EndofData_backup + 1
+#    backup_table = backup_table.iloc[0:EndofData,0:6]
+# else:
+#     Output = "Success"   
+
+# maintabletype = type(backup_table.iloc[1,2])
+# backuptabletype = type(table.iloc[1,2])
+
+# if maintabletype == int and backuptabletype == int:
+#    IncidentType = "Unknown"
+# elif maintabletype == int and backuptabletype != int:
+#     IncidentType_DB = table
+# elif maintabletype != int and backuptabletype == int:
+#     IncidentType_DB = backup_table
+# else: 
+#     IncidentType = "Unknown"
 
 ## Initialize Database
 token = INFLUXDB_TOKEN
@@ -33,7 +109,7 @@ write_api = write_client.write_api(write_options=SYNCHRONOUS)
 sha256_hash = hashlib.new("SHA256")
 Active_Records = []
 
-#CloseAllCases.CloseAllCases()
+CloseAllCases.CloseAllCases()
 
 ## Process Table to DB
 for index2 in range(len(table)):
@@ -49,12 +125,19 @@ for index2 in range(len(table)):
     else:
         DateandTime = str(table.iloc[index2,1])
 
+    # #IncidentType = table.iloc[index2,2]
+    # if IncidentType == "Unknown":
+    #     IncidentType = "Unknown"
+    # else:
+    #     IncidentType = str(IncidentType_DB.iloc[index2,2])
+
+
     IncidentType = table.iloc[index2,2]
     if str(IncidentType) == 'nan':
-        IncidentType = "Unavailable"
+        IncidentType = "Unknown"
     else:
         IncidentType = str(table.iloc[index2,2])
-
+        
     Address = table.iloc[index2,3]
     if str(Address) == 'nan':
         Address = ""
@@ -81,17 +164,16 @@ for index2 in range(len(table)):
     
     [Lat, Long] = my_LatLong.my_LatLong(Address, CrossStreets)
 
-    #Exist = QueryDB.QueryDB(record_ID)
-    Exist = 0
+    Exist = QueryDB.QueryDB(record_ID)
     if Exist == 1:
        Status = "Open" 
     else:
         Status = "Open"
         point = (
-            Point("911Events")
-            .field("record_ID", record_ID)
+            Point("911Events3")
+            .field("Status", Status)
+            .tag("record_ID", record_ID)
             .tag("Date/Time", DateandTime)
-            .tag("Status", Status)
             .tag("Agency", Agency)
             .tag("Incident Type", IncidentType)
             .tag("City Jurisdiction", CityJurisdiction)
