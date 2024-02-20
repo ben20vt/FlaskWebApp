@@ -15,7 +15,7 @@ url = r'https://911events.ongov.net/CADInet/app/_rlvid.jsp?_rap=pc_Cad911Toweb.d
 ## Read from 911events.ongov.net
 tables = pd.read_html(url) # Returns list of all tables on page
 table0 = tables[0] # Select table of interest
-idx = len(table0)
+
 EndofData = TrimIngestData.TrimIngestData(table0)
 EndofData = EndofData + 1
 table = table0.iloc[7:EndofData,0:6]
@@ -33,7 +33,7 @@ write_api = write_client.write_api(write_options=SYNCHRONOUS)
 sha256_hash = hashlib.new("SHA256")
 Active_Records = []
 
-CloseAllCases.CloseAllCases()
+#CloseAllCases.CloseAllCases()
 
 ## Process Table to DB
 for index2 in range(len(table)):
@@ -81,7 +81,8 @@ for index2 in range(len(table)):
     
     [Lat, Long] = my_LatLong.my_LatLong(Address, CrossStreets)
 
-    Exist = QueryDB.QueryDB(record_ID)
+    #Exist = QueryDB.QueryDB(record_ID)
+    Exist = 0
     if Exist == 1:
        Status = "Open" 
     else:
