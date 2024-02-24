@@ -6,7 +6,7 @@ from influxdb_client.client.write_api import SYNCHRONOUS
 import QueryDB
 from numpy import nan
 import hashlib
-import CloseAllCases
+import Archive_Cases
 import TrimIngestData
 
 INFLUXDB_TOKEN = 'w04oO0vXp-RrUYE7Nj4Wqc9gR0c4KF0IQ9wfsqGQvP5bGt-KWgdYM6RYG4nw6VF_khZNEYaLT1dx1fAUTTMCWQ=='
@@ -14,9 +14,22 @@ url = r'https://911events.ongov.net/CADInet/app/_rlvid.jsp?_rap=pc_Cad911Toweb.d
 
 ## Read from 911events.ongov.net
 tables = pd.read_html(url) # Returns list of all tables on page
-table = tables[6] # Select table of interest
+table = tables[0] # Select table of interest
+for i in range(7):
+    table = table.drop(i)
+EndofData = TrimIngestData.TrimIngestData(table)
+
+
+tables = pd.read_html(url) # Returns list of all tables on page
+table = tables[0] # Select table of interest
 length = len(table)
-table = table.drop([length - 1])
+for i in range(length - EndofData - 1):
+    table = table.drop(i + EndofData + 1)
+
+for i in range(7):
+    table = table.drop(i) 
+
+   
 
 ## Initialize Database
 token = INFLUXDB_TOKEN
@@ -104,6 +117,9 @@ for index2 in range(len(table)):
         write_api.write(bucket=bucket, org="User-Space", record=point)
     
         Active_Records.append(record_ID)
-    #CloseAllCases.CloseAllCases(Active_Records)
-  
+    
 
+  
+Passed_Query = Archive_Cases.SortInactive(Active_Records)
+
+Archive_Cases.ChangeStatus(Passed_Query)

@@ -1,78 +1,47 @@
-# table0 = tables[0] # Select table of interest
-# table = tables[0]
-# EndofData = TrimIngestData.TrimIngestData(table0)
-# #EndofData = EndofData + 1
-# #table = table0.iloc[7:EndofData,0:6]
-# end = len(table)
-# length = end - EndofData - 1
-# to_drop = [0, 1, 2, 3, 4, 5, 6]
-# for i in range(length):
-#     to_drop.append(i + EndofData + 1)
-# table = table.drop(to_drop)
+import influxdb_client, os, time
+from influxdb_client import InfluxDBClient, Point, WritePrecision
+from influxdb_client.client.write_api import SYNCHRONOUS
+
+token = 'w04oO0vXp-RrUYE7Nj4Wqc9gR0c4KF0IQ9wfsqGQvP5bGt-KWgdYM6RYG4nw6VF_khZNEYaLT1dx1fAUTTMCWQ=='
+org = "User-Space"
+url = "http://10.50.1.101:8086"
+
+client = influxdb_client.InfluxDBClient(url=url, token=token, org=org)
 
 
-# backup_table = tables[6]
-# EndofData_backup = TrimIngestData.TrimIngestData(backup_table)
-# EndofData_backup = EndofData_backup + 1
-# backup_table = backup_table.iloc[0:EndofData,0:6]
 
-# maintabletype = type(backup_table.iloc[1,2])
-# backuptabletype = type(table.iloc[1,2])
+query_api = client.query_api()
 
-# if maintabletype == int and backuptabletype == int:
-#     tables = pd.read_html(url) # Returns list of all tables on page
-#     table0 = tables[0] # Select table of interest
+query = """from(bucket: "OnondagaCountyiCAD")
+ |> range(start: -10d)
+ |> filter(fn: (r) => r._measurement == "911Events")
+ |> filter(fn: (r) => r["record_ID"] != "PlaceholderID" )"""
 
-#     EndofData = TrimIngestData.TrimIngestData(table0)
-#     EndofData = EndofData + 1
-#     table = table0.iloc[7:EndofData,0:6]
-#     backup_table = tables[6]
-#     EndofData_backup = TrimIngestData.TrimIngestData(backup_table)
-#     EndofData_backup = EndofData_backup + 1
-#     backup_table = backup_table.iloc[0:EndofData,0:6]
-# else:
-#     Output = "Success"
 
-# maintabletype = type(backup_table.iloc[1,2])
-# backuptabletype = type(table.iloc[1,2])
+tables = query_api.query(query, org="User-Space")
 
-# if maintabletype == int and backuptabletype == int:
-#    tables = pd.read_html(url) # Returns list of all tables on page
-#    table0 = tables[0] # Select table of interest
-#    EndofData = TrimIngestData.TrimIngestData(table0)
-#    EndofData = EndofData + 1
-#    table = table0.iloc[7:EndofData,0:6]
-#    backup_table = tables[6]
-#    EndofData_backup = TrimIngestData.TrimIngestData(backup_table)
-#    EndofData_backup = EndofData_backup + 1
-#    backup_table = backup_table.iloc[0:EndofData,0:6]
-# else:
-#     Output = "Success"   
+for table in tables:
+  for record in table.records:
+    Agency_get = record.values.get('Agency')
+    record_ID_get = record.values.get('record_ID')
+    DateandTime_get = record.values.get('Date/Time')
+    IncidentType_get = record.values.get('Incident Type')
+    CityJurisdiction_get = record.values.get('City Jurisdiction')
+    Lat_get = record.values.get('Latitude')
+    Long_get = record.values.get('Longitude')
+    Time_get = record.values.get('_time')
+    point = (
+        Point("911Events")
+        .field("Status", "Closed")
+        .tag("record_ID", record_ID_get)
+        .tag("Date/Time", DateandTime_get)
+        .tag("Agency", Agency_get)
+        .tag("Incident Type", IncidentType_get)
+        .tag("City Jurisdiction", CityJurisdiction_get)
+        .tag("Latitude", Lat_get)
+        .tag("Longitude", Long_get)
+        .time("_time", Time_get)
+        )
+    #list = list.append(point)
+    write_api.write(bucket=bucket, org="User-Space", record=point)
 
-# maintabletype = type(backup_table.iloc[1,2])
-# backuptabletype = type(table.iloc[1,2])
-
-# if maintabletype == int and backuptabletype == int:
-#    tables = pd.read_html(url) # Returns list of all tables on page
-#    table0 = tables[0] # Select table of interest
-#    EndofData = TrimIngestData.TrimIngestData(table0)
-#    EndofData = EndofData + 1
-#    table = table0.iloc[7:EndofData,0:6]
-#    backup_table = tables[6]
-#    EndofData_backup = TrimIngestData.TrimIngestData(backup_table)
-#    EndofData_backup = EndofData_backup + 1
-#    backup_table = backup_table.iloc[0:EndofData,0:6]
-# else:
-#     Output = "Success"   
-
-# maintabletype = type(backup_table.iloc[1,2])
-# backuptabletype = type(table.iloc[1,2])
-
-# if maintabletype == int and backuptabletype == int:
-#    IncidentType = "Unknown"
-# elif maintabletype == int and backuptabletype != int:
-#     IncidentType_DB = table
-# elif maintabletype != int and backuptabletype == int:
-#     IncidentType_DB = backup_table
-# else: 
-#     IncidentType = "Unknown"
