@@ -8,6 +8,7 @@ from numpy import nan
 import hashlib
 import Archive_Cases
 import TrimIngestData
+import time
 
 INFLUXDB_TOKEN = 'w04oO0vXp-RrUYE7Nj4Wqc9gR0c4KF0IQ9wfsqGQvP5bGt-KWgdYM6RYG4nw6VF_khZNEYaLT1dx1fAUTTMCWQ=='
 url = r'https://911events.ongov.net/CADInet/app/_rlvid.jsp?_rap=pc_Cad911Toweb.doLink1Action&_rvip=/events.jsp'
@@ -97,7 +98,7 @@ for index2 in range(len(table)):
     record_ID = sha256_hash.hexdigest()
     
     [Lat, Long] = my_LatLong.my_LatLong(Address, CrossStreets)
-
+    timestamp = time.time_ns()
     Exist = QueryDB.QueryDB(record_ID)
     if Exist == 1:
        Status = "Open" 
@@ -113,6 +114,7 @@ for index2 in range(len(table)):
             .tag("City Jurisdiction", CityJurisdiction)
             .tag("Latitude", Lat)
             .tag("Longitude", Long)
+            .time(timestamp)
         )
         write_api.write(bucket=bucket, org="User-Space", record=point)
     
