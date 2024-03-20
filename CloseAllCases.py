@@ -4,7 +4,7 @@ from influxdb_client.client.write_api import SYNCHRONOUS
 
 token = 'w04oO0vXp-RrUYE7Nj4Wqc9gR0c4KF0IQ9wfsqGQvP5bGt-KWgdYM6RYG4nw6VF_khZNEYaLT1dx1fAUTTMCWQ=='
 org = "User-Space"
-url = "http://10.50.1.101:8086"
+url = "http://http://syr-incidents.koniers.net:8086"
 
 
 def CloseAllCases(Active_Records):

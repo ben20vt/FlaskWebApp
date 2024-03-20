@@ -35,7 +35,7 @@ for i in range(7):
 ## Initialize Database
 token = INFLUXDB_TOKEN
 org = "User-Space"
-url2 = "http://10.50.1.101:8086"
+url2 = "http://http://syr-incidents.koniers.net:8086"
 
 write_client = influxdb_client.InfluxDBClient(url=url2, token=token, org=org)
 bucket="OnondagaCountyiCAD"
